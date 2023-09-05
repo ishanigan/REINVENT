@@ -45,9 +45,10 @@ class no_sulphur():
         return 0.0
 
 # TODO: for now, explicitly enforce SMILES validity, later can relax this and see what happens 
-# weird: different scoring function from the paper, play around with this
 class bandgap_range():
-    """Scores structures based band gap values within a certain target range."""
+    """Scores structures based on band gap values computed using Openbabel.
+    Band gaps should within a certain target range. Score is 1 if the badgap is within 
+    the specified range, otherwise the Score is 0."""
 
     kwargs = []
 
@@ -57,9 +58,7 @@ class bandgap_range():
         mol = Chem.MolFromSmiles(smile)
         if mol:
             bandgap = get_bandgap_openbabel(smile)
-            in_range=False
-            if bandgap < 4 and bandgap > 1:
-                in_range=True
+            in_range = (bandgap < 4 and bandgap > 1)
             return float(in_range)
         return 0.0
     
@@ -74,7 +73,7 @@ class bandgap_range_soft():
         mol = Chem.MolFromSmiles(smile)
         if mol:
             bandgap = get_bandgap_openbabel(smile)
-        #     return float(norm.pdf(bandgap, 2, 1)/norm.pdf(2, 2, 1))
+            return float(norm.pdf(bandgap, 2, 1)/norm.pdf(2, 2, 1))
         return 0.0
 
 class tanimoto():

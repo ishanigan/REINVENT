@@ -89,7 +89,7 @@ def pickle_to_data(filename):
 
     return smiles_list, bandgap
 
-# Percentage of smiles in a list that are 
+# Percentage of smiles in a list that are not in the original dataset used to train Prior  
 def percentage_unique(smiles):
     # import qm9 dataset
     train_smiles_list, train_bandgap = pickle_to_data("data//qm9_key_smiles_1_full_train_data.pickle")

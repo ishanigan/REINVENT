@@ -97,6 +97,6 @@ if __name__ == "__main__":
     pretrain()
 
 # Things to look at
-# Way to test RNN generation 
+# Ways to test RNN generation 
 # Look at what figs they have for RNN validation 
 # Compare to their dataset? 

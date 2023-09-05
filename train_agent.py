@@ -12,7 +12,7 @@ from data_structs import Vocabulary, Experience
 from scoring_functions import get_scoring_function
 from utils import Variable, seq_to_smiles, fraction_valid_smiles, unique, sa_score, percentage_easy_sa, percentage_unique
 from vizard_logger import VizardLog
-#from scipy.stats import levy
+from scipy.stats import levy
 
 def train_agent(restore_prior_from='data/Prior.ckpt',
                 restore_agent_from='data/Prior.ckpt',
@@ -92,21 +92,18 @@ def train_agent(restore_prior_from='data/Prior.ckpt',
         smiles = seq_to_smiles(seqs, voc)
         score = scoring_function(smiles)
 
-        # Update sigma if needed
+        # Sigma updating scheme
         if sigma_mode == 'linear_decay':
             rate = 0.1
             sigma = 30-rate*step
-            sigmas.append(sigma)
 
         if sigma_mode == 'exponential_decay':
             rate = 0.1
             sigma = 30 * (1 - rate)**step
-            sigmas.append(sigma)
 
         if sigma_mode == 'levy_flight':
             x = np.random.random(1)[0]
             sigma = int(levy.pdf(x)*100)
-            sigmas.append(sigma)
         
         if sigma_mode == 'adaptive':
             threshold = 0.6
@@ -117,20 +114,17 @@ def train_agent(restore_prior_from='data/Prior.ckpt',
                 sigma = int(sigma*(1-mean_score))
             else:
                 sigma = int(sigma*1/(1-mean_score))
-            print(sigma)
-            sigmas.append(sigma)
 
         if sigma_mode == 'uncertainty_aware':
             uncertainty = np.std(score)
-            print(uncertainty)
-            sigma = int(sigma * uncertainty*5)
-            sigmas.append(sigma)
+            sigma = int(sigma * uncertainty*5) # there's obviously a better way to scale sigma with uncertainty, play around with this
 
         if sigma_mode == 'uncertainty_aware_inverse':
             uncertainty = np.std(score)
-            print(uncertainty)
             sigma = int(sigma / uncertainty)
-            sigmas.append(sigma)
+            
+        
+        sigmas.append(sigma)
 
         # Ideas: learn sigma???
         # just add explicit term to loss func? 
@@ -199,7 +193,7 @@ def train_agent(restore_prior_from='data/Prior.ckpt',
                             (smiles[:12], score[:12])]), "SMILES", dtype="text", overwrite=True)
         logger.log(np.array(step_score), "Scores")
 
-        # Log SMILES features
+        # Log SMILES diagnostics
         sa.append(percentage_easy_sa(smiles))
         novel.append(percentage_unique(smiles))
         valid.append(fraction_valid_smiles(smiles))
@@ -223,6 +217,7 @@ def train_agent(restore_prior_from='data/Prior.ckpt',
     smiles = seq_to_smiles(seqs, voc)
     score = scoring_function(smiles)
 
+    # Log diagnostics 
     np.save(os.path.join(save_dir,'training_log_sa.npy'), np.array(sa))
     np.save(os.path.join(save_dir,'training_log_novel.npy'), np.array(novel))
     np.save(os.path.join(save_dir,'training_log_valid.npy'), np.array(valid))
